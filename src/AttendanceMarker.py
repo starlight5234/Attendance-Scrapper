@@ -14,27 +14,21 @@
 # limitations under the License.
 #
 
-#!/bin/sh
+Class_List = list(open("../Inputs/Classlist.txt", "r"))
+Attendance_Today = list(open("Attendance.txt", "r"))
+Teacher_list = list(open("../Inputs/Teachers.txt", "r"))
+HEADER = open("../Inputs/HEADER.txt", "r")
 
-while [ "${#}" -gt 0 ]; do
-    case "${1}" in
-        * )
-            CSV_FILE=${1}
-            ;;
-    esac
-    shift
-done
 
-if [ -z "${CSV_FILE}" ]; then
-    echo "No input given"
-    exit
-fi
+print(HEADER.read())
+print("Name of absent students: ")
+i=1
 
-NoOfLines=$(wc -l $CSV_FILE | awk '{ print $1 }')
+for x in Class_List:
 
-TMP_CONTENT=$(cat $CSV_FILE | sed "$(( ${NoOfLines}-2)),$ d" | sed '1,4d' | sed 's/",.*//g' | sed 's/"//g')
-echo -e "$TMP_CONTENT" > Attendance.txt
+    if x in Teacher_list:
+        continue
 
-python3 AttendanceMarker.py
-
-rm -f Attendance.txt
+    if x not in Attendance_Today:
+        print(f"{i}. {x.strip()}")
+        i = i+1

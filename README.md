@@ -9,9 +9,7 @@
 
 ### Usage:
 
-- Paste the CSV in the folder where this repository is contained
-- Use this command
+- Paste the CSV in the folder where this repository is contained and rename it to Attendance.csv
+- Execute the following command
 
-```
-./AttendanceMarker.sh NameOrPathToCSVFile.csv
-```
+``/bin/sh src/AttendanceMarker.sh Attendance.csv``
