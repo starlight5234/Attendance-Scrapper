@@ -17,7 +17,7 @@
 #!/bin/sh
 #!/bin/bash
 
-cd src
+[ ! -d "out/tmp" ] && mkdir out/tmp -p
 
 while [ "${#}" -gt 0 ]; do
     case "${1}" in
@@ -28,14 +28,23 @@ while [ "${#}" -gt 0 ]; do
     shift
 done
 
-if [ -z "${CSV_FILE}" ]; then
-    echo "No input given"
+if [ ! -s "${CSV_FILE}" ]; then
+    echo "Attendance.csv is missing"
     exit
 fi
 
-echo -e "Cleaning up."
-rm -rf ../out
-mkdir -p ../out/tmp
+cd src
+
+read -p "Enter Division of Class to take attendance of: " DIV
+DIV=${DIV^^}
+
+if [ ! -z ${DIV}  ]; then
+    CLASS_LIST_FILE_NAME="Classlist-${DIV^^}.txt"
+    echo "${DIV}" > ../out/tmp/Division.txt
+else
+    CLASS_LIST_FILE_NAME="Classlist.txt"
+    echo " " > ../out/tmp/Division.txt
+fi
 
 # Used for cleanup of CSV generated from extension
 NoOfLines=$(wc -l ../$CSV_FILE | awk '{ print $1 }')
@@ -47,43 +56,56 @@ echo -e "$CLEAN_CSV_CONTENT" > CSV_Cleanup.txt
 # Prints the first column into a file ready for Attendance
 NAME_OF_STUDENTS=$(cat CSV_Cleanup.txt | sed 's/",.*//g' | sed 's/"//g')
 echo -e "$NAME_OF_STUDENTS" > Attendance.txt
+python3 Cleanup.py > Attendance_Cleaned.txt
 
-read -p "Generate list of Absent students?[y/n] :" Absenties
-if [[ $Absenties == 'y' || $Absenties == 'Y' ]]; then
-    python3 AttendanceMarker.py > ../out/Absenties.txt
+[ ! -s ../Inputs/${CLASS_LIST_FILE_NAME} ] && CLASS_LIST_MISSING="1"
+
+if [[ $CLASS_LIST_MISSING == "1" ]]; then
+    echo "!! Warning: There was no classlist of Division ${DIV} found !!"
+    echo "If this was your first day of running this program then it is fine you can ignore the warning"
+    echo "If this was not your first day contact then you might have deleted your Students Class list"
+    echo "However there was a classlist generated based on your today's class."
+    rm -f CSV_Cleanup.txt
+    read -p "Would you like to set that as your default Class list(Leave empty to respond with no)? " CLASS_LIST_COPY
+
+    if [ ! -z ${CLASS_LIST_COPY}  ]; then
+        cp Attendance_Cleaned.txt ../Inputs/${CLASS_LIST_FILE_NAME}
+        chmod 400 ../Inputs/${CLASS_LIST_FILE_NAME}
+        echo "The list generated from today's attendance is set as your default classlist and locked from editing."
+    fi
+
+    rm -f Attendance_Cleaned.txt
+    echo "Exiting.."
+    exit
 fi
 
-echo
-read -p "Generate last seen of students in gmeet?[y/n] :" Last_present
+echo "Cleaning up."
 
-if [[ $Last_present == 'y' || $Last_present == 'Y' ]]; then
-    echo -e "Generating LastSeen.txt"
-    echo -e "$(cat ../Inputs/HEADER.txt)\n" >> AttendanceTime.txt
-    while read p; do 
-        if grep -Fxq "$p" ../Inputs/Teachers.txt ;then
-        	continue
-        fi
-        FIRST_Seen=$(grep "$p" CSV_Cleanup.txt | awk '{ print $7 }' | sed 's/"//g' | sed 's/,//g')
-        LAST_Seen=$(grep "$p" CSV_Cleanup.txt | awk '{ print $8 }' | sed 's/"//g' | sed 's/,//g')
-        DIFF=$(( $(date -d "$LAST_Seen" "+%s") - $(date -d "$FIRST_Seen" "+%s") ))
-        TIME_IN_MEET=$(echo "scale=2 ; (($DIFF/3600))*60" | bc )
-        grep "$p" CSV_Cleanup.txt | awk '{ print $1 " " $2 " : " $9 " mins"}' | sed 's/"//g' | sed 's/,//g' >> AttendanceTime.txt
-    done < Attendance.txt
-fi
+echo "Generating list of Absent students of Div $(cat ../out/tmp/Division.txt)"
+python3 AttendanceMarker.py > ../out/Absenties.txt
 
-read -p "Display output?[y/n] :" Output
-echo
-if [[ $Output == 'y' || $Output == 'Y' ]]; then
-    clear
-    echo 
-    cat ../out/Absenties.txt
-    echo -e "\nName of student and time in GMeet:\n"
-    cat AttendanceTime.txt | sed '1,17d'
-fi
+echo "Generating Attendance time of students"
+echo -e "$(cat ../Inputs/HEADER.txt)\n" >> AttendanceTime.txt
+while read p; do 
+    if grep -Fxq "$p" ../Inputs/Teachers.txt ;then
+    	continue
+    fi
+    
+    TIME_IN_MEET=$(grep "$p" CSV_Cleanup.txt | awk '{ print $9 }' | sed 's/"//g' | sed 's/,//g')
+    if [ ! -z $TIME_IN_MEET ];then
+        grep "$p" CSV_Cleanup.txt | awk -F, '{ print $1 " : " $7 " mins"}' | sed 's/"//g' | sed 's/,//g' >> AttendanceTime.txt
+    else
+        echo "$(grep "$p" CSV_Cleanup.txt | awk -F, '{ print $1 }' | sed 's/"//g' | sed 's/,//g') : 0 mins" >> AttendanceTime.txt
+    fi
+done < Attendance_Cleaned.txt
+
+mv AttendanceTime.txt ../out/
 
 # Move all files to output directory
-mv Attendance.txt ../out/tmp
-mv AttendanceTime.txt ../out/
+mv Attendance_Cleaned.txt ../out/tmp/Attendance.txt
 mv CSV_Cleanup.txt ../out/tmp
 
 cd ..
+
+echo
+cat out/Absenties.txt

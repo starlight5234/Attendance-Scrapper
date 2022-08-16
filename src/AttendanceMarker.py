@@ -14,21 +14,27 @@
 # limitations under the License.
 #
 
-Class_List = list(open("../Inputs/Classlist.txt", "r"))
-Attendance_Today = list(open("Attendance.txt", "r"))
-Teacher_list = list(open("../Inputs/Teachers.txt", "r"))
+import os, datetime
+
 HEADER = open("../Inputs/HEADER.txt", "r")
-
-
 print(HEADER.read())
-print("Name of absent students: ")
+
+Date = datetime.datetime.now()
+NameOfDiv = open("../out/tmp/Division.txt", "r")
+
+print(f'List of students absent on {Date.strftime("%a %d %b %Y")} from Div {NameOfDiv.read().strip().upper()}')
+
+if NameOfDiv.read().strip() == "" :
+    # print("List of students absent on " + Date.strftime("%a %d %b %Y"))
+    Class_List = list(open("../Inputs/Classlist.txt", "r"))
+else :
+    Class_List = list(open(f"../Inputs/Classlist-{NameOfDiv.read().strip()}.txt", "r"))
+
+Attendance_Today = list(open("Attendance_Cleaned.txt", "r"))
+print(" ")
 i=1
 
 for x in Class_List:
-
-    if x in Teacher_list:
-        continue
-
     if x not in Attendance_Today:
         print(f"{i}. {x.strip()}")
         i = i+1
