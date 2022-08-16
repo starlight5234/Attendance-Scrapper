@@ -1,4 +1,4 @@
-Attendance Marker - Copyright (C) 2021 Starlight5234
+Attendance Marker - Copyright (C) 2021-22 Anurag Chorghe
 
 Licensed under the Apache License, Version 2.0 (the "License");
 you may not use this file except in compliance with the License.
@@ -12,5 +12,11 @@ WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 See the License for the specific language governing permissions and
 limitations under the License.
 
-# Features to add : 
-# - Roll number of the students
+Date: Tue 16 Aug 2022 
+Present for DBMS: 1 out of 8
+
+Absent Roll numbers: 1 2 3 4 5 6 8 
+Total absent: 7
+
+Presentie list: 
+007 Anurag Chorghe

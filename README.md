@@ -2,14 +2,16 @@
 
 ### Tells the name of missing students from a class list
 
-- Written in Combination of Bash & Python
-- Bash is for cleaning up the csv file generated that records the attendance, install [this extension](https://github.com/al-caughey/Google-Meet-Attendance) to generate the csv file and write it to a text file
-- Python compares the Classlist with cleaned up list
-- Can add teacher names to it as well
+- Written in Python
+- Installs [this extension](https://github.com/al-caughey/Google-Meet-Attendance) and generate the csv file
+- Python uses RegEx to breakdown the names and roll numbers. Format: rollnumber_name
 
 ### Usage:
 
 - Paste the CSV in the folder where this repository is contained and rename it to Attendance.csv
-- Execute the following command
+- Execute the python file
 
-``/bin/sh src/AttendanceMarker.sh Attendance.csv``
+### Notes:
+- Modify L53 based on the folder you place this project in
+- The name of students should be in format 
+`` rollnumber_name``
